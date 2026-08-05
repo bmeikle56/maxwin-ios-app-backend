@@ -9,14 +9,25 @@ import (
 )
 
 // LoadEnv loads .env.dv or .env.pd based on APP_ENV (default: dv).
-// APP_ENV can be set in the process environment before startup.
+// On Railway, vars come from the platform — missing files are OK if JWT_SECRET is set.
 func LoadEnv() error {
 	env := strings.ToLower(strings.TrimSpace(os.Getenv("APP_ENV")))
 	if env == "" {
 		env = "dv"
+		_ = os.Setenv("APP_ENV", env)
 	}
 
 	filename := ".env." + env
+	if _, err := os.Stat(filename); err != nil {
+		if os.IsNotExist(err) {
+			if strings.TrimSpace(os.Getenv("JWT_SECRET")) == "" {
+				return fmt.Errorf("%s not found and JWT_SECRET is not set", filename)
+			}
+			return nil
+		}
+		return fmt.Errorf("stat %s: %w", filename, err)
+	}
+
 	if err := godotenv.Load(filename); err != nil {
 		return fmt.Errorf("failed to load %s: %w", filename, err)
 	}
@@ -29,10 +40,6 @@ func Port() string {
 		return "8080"
 	}
 	return port
-}
-
-func AuthToken() string {
-	return os.Getenv("AUTH_TOKEN")
 }
 
 func UseMockDB() bool {

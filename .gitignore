@@ -1,5 +1,9 @@
 .DS_Store
 .env
+.env.dv
+.env.pd
+.env.DV
+.env.PD
 *.exe
 *.test
 /bin/

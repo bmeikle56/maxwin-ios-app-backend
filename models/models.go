@@ -86,6 +86,13 @@ type AuthRequest struct {
 	Password string `json:"password"`
 }
 
+// AuthResponse is returned after a successful sign-in.
+type AuthResponse struct {
+	User      User      `json:"user"`
+	Token     string    `json:"token"`
+	ExpiresAt time.Time `json:"expiresAt"`
+}
+
 // PasswordResetRequest is the password-reset body.
 type PasswordResetRequest struct {
 	Username string `json:"username"`

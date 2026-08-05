@@ -57,13 +57,16 @@ func main() {
 		})
 	})
 
+	// Public auth endpoints — no JWT required.
+	r.POST("/auth/signin", authHandlers.SignIn)
+	r.POST("/auth/password-reset", authHandlers.PasswordReset)
+
+	// Protected routes — require a per-user Bearer JWT.
 	api := r.Group("/")
 	api.Use(middleware.AuthMiddleware())
 	{
-		api.POST("/auth/signin", authHandlers.SignIn)
 		api.POST("/auth/signout", authHandlers.SignOut)
 		api.DELETE("/auth/account", authHandlers.DeleteAccount)
-		api.POST("/auth/password-reset", authHandlers.PasswordReset)
 
 		api.GET("/sessions", sessionHandlers.List)
 		api.GET("/sessions/:id", sessionHandlers.Get)

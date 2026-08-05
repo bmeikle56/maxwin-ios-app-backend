@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"maxwin/middleware"
 	"maxwin/mock"
 	"maxwin/models"
 	"maxwin/services"
@@ -25,7 +26,7 @@ func (h *AuthHandlers) SignIn(c *gin.Context) {
 		return
 	}
 
-	user, err := h.service.SignIn(req.Username, req.Password)
+	resp, err := h.service.SignIn(req.Username, req.Password)
 	if err != nil {
 		if errors.Is(err, mock.ErrEmptyFields) {
 			c.JSON(http.StatusBadRequest, models.ErrorResponse{Error: err.Error()})
@@ -35,21 +36,22 @@ func (h *AuthHandlers) SignIn(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, user)
+	c.JSON(http.StatusOK, resp)
 }
 
 func (h *AuthHandlers) SignOut(c *gin.Context) {
+	// Stateless JWTs are discarded client-side. Endpoint kept for iOS symmetry.
 	c.JSON(http.StatusOK, gin.H{"response": "signed out"})
 }
 
 func (h *AuthHandlers) DeleteAccount(c *gin.Context) {
-	var req models.AuthRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, models.ErrorResponse{Error: "invalid JSON"})
+	username := middleware.Username(c)
+	if username == "" {
+		c.JSON(http.StatusUnauthorized, models.ErrorResponse{Error: "unauthorized"})
 		return
 	}
 
-	h.service.DeleteAccount(req.Username)
+	h.service.DeleteAccount(username)
 	c.JSON(http.StatusOK, gin.H{"response": "account deleted"})
 }
 
